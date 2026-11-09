@@ -22,7 +22,7 @@ src/travel_agent_api/
 
 ## Avvio
 
-Requisiti: Python 3.13 e Poetry 2 (testato su Windows, PowerShell).
+Requisiti: Python 3.10 o superiore e Poetry 2 (sviluppato con Python 3.13 su Windows, PowerShell).
 
 ```powershell
 git clone https://github.com/Miticodom/travel-agent-api_domenico_mirabelli.git
@@ -38,7 +38,7 @@ Variabili del `.env` (non viene versionato; nella repo c'è solo `.env.example`)
 
 | Variabile | Descrizione |
 |---|---|
-| `OPENAI_API_KEY`, `OPENAI_MODEL` | **OpenAI**. Modello di default: `gpt-4o`. |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | **OpenAI**. Modello di default: `gpt-4o` (OpenAI lo ritira dalle API il 14 gennaio 2027: dopo quella data imposta un altro modello con `OPENAI_MODEL`). |
 | `GROQ_API_KEY`, `GROQ_MODEL` | **Groq**. Modello di default: `openai/gpt-oss-120b`. |
 | `LLM_PROVIDER` | Opzionale: `openai` o `groq`. Se manca, usa OpenAI se c'è una `OPENAI_API_KEY` valida, altrimenti Groq. |
 | `API_MODE` | `test` (dati di esempio, default) o `prod` (SerpApi). |
@@ -51,9 +51,9 @@ Senza una chiave SerpApi i voli e gli hotel sono **dati di esempio** generati da
 - **OpenAI e Groq.** Le guide usavano solo OpenAI (`ChatOpenAI`, `gpt-4o`); io avevo sviluppato il progetto con Groq perché non avevo
   una chiave OpenAI, e dopo il feedback del docente l'ho reso compatibile con entrambi. `llm.py` (`get_llm()`) sceglie provider e modello
   dal `.env`, e tutti i tool e l'agente usano quella funzione. Il nome del modello sta nel `.env` perché il primo modello Groq che avevo
-  scelto (`llama-3.3-70b-versatile`) è stato spento. Per i modelli OpenAI che non accettano `temperature` (serie `o` e `gpt-5`) il parametro viene omesso.
+  scelto (`llama-3.3-70b-versatile`) è stato spento. La `temperature` viene passata solo ai modelli `gpt-4*` e `gpt-3.5*`; per gli altri (serie `o`, `gpt-5`, `gpt-6`...) si usa il valore predefinito.
 - **`API_MODE` test/prod**, citata dalle guide ma non realizzata.
-- **Python** `>=3.13,<4.0` (Poetry aveva scritto `>=3.13` senza tetto, e le librerie di LangChain dichiarano `<4.0`); struttura `src/`.
+- **Python** `>=3.10,<4.0`: Poetry aveva scritto `>=3.13` leggendo la mia versione, ma così il progetto non si installava con Python più vecchi; il tetto `<4.0` serve perché le librerie di LangChain lo dichiarano. Struttura `src/`.
 - **Tool:** parametri piatti invece dell'oggetto `params`; in `flights_finder` tolto `"stops": "1"` (in SerpApi, da quanto ho letto, significa "solo voli diretti")
   e risultati ridotti ai campi utili; in `hotels_finder` `hotel_class` opzionale (nella guida il default era 2 stelle); in `chain_historical_expert` aggiunto
   `StrOutputParser` (la guida restituiva l'oggetto messaggio); in `chain_travel_plan` istruzioni sul formato con `get_format_instructions()`, e numero di giorni
@@ -73,5 +73,7 @@ con una richiesta incompleta ("Vorrei andare a Barcellona.") l'agente non chiama
 - La modalità `prod` (SerpApi) non è stata testata con una chiave reale.
 - **Il supporto a OpenAI non è stato provato con una chiave OpenAI reale**: l'ho verificato con un server simulato che imita le API di OpenAI
   (chiamata al tool, risposta finale, secondo turno con la cronologia), seguendo le impostazioni delle guide.
+- Il modello di default `gpt-4o` è in dismissione. Per i modelli più recenti (es. `gpt-6-*`, `gpt-5.6-sol`) `langchain-openai` usa la Responses API
+  invece delle Chat Completions: quel percorso non è stato provato.
 - Non ci sono test automatici (`tests/` è vuota).
 - La risposta include campi interni del modello (es. `reasoning_content`) che il client rimanda a ogni turno; in Swagger la risposta appare come `"string"` perché manca un `response_model`.

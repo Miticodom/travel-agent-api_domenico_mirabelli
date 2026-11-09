@@ -8,8 +8,9 @@ load_dotenv()
 DEFAULT_OPENAI_MODEL = "gpt-4o"
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 
-# Alcuni modelli OpenAI (serie o e gpt-5) non accettano un valore di temperature personalizzato
-_NO_TEMPERATURE_PREFIXES = ("o1", "o3", "o4", "gpt-5")
+# Modelli OpenAI che accettano una temperature personalizzata. Gli altri (serie o, gpt-5, gpt-6...)
+# la rifiutano o la ignorano: per loro non si passa e si usa il valore predefinito.
+_TEMPERATURE_PREFIXES = ("gpt-4", "gpt-3.5")
 
 
 def _has_key(name: str) -> bool:
@@ -50,7 +51,7 @@ def get_llm(temperature: float = 0.3) -> BaseChatModel:
 
         model = os.getenv("OPENAI_MODEL", "").strip() or DEFAULT_OPENAI_MODEL
         kwargs = {}
-        if not model.startswith(_NO_TEMPERATURE_PREFIXES):
+        if model.startswith(_TEMPERATURE_PREFIXES):
             kwargs["temperature"] = temperature
         print(f"[llm] provider=openai | modello={model} | temperature={kwargs.get('temperature', 'default')}")
         return ChatOpenAI(model=model, **kwargs)
